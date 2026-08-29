@@ -17,18 +17,48 @@
 2. 下载本项目（页面绿色 **Code → Download ZIP**，或 `git clone`），解压后**双击 `启动.bat`**——首次会自动创建虚拟环境、安装依赖（约 2 分钟，已配国内镜像加速），完成后浏览器自动打开
 3. 左侧「**AI 设置**」填入 API Key 即可开始对话（接口地址与模型已预填，一般只需填 Key；不配置也不影响手动查课）。没有 Key？向作者索取，或在智谱开放平台 open.bigmodel.cn 注册，`glm-4-flash` 模型免费
 
-> 想让 AI agent 帮你部署？让它执行下面几行即可：
->
-> ```bash
-> git clone https://github.com/newnewself/xuanke-assistant.git
-> cd xuanke-assistant
-> pip install -r requirements.txt
-> python -m uvicorn app.main:app --host 0.0.0.0 --port 8000
-> ```
->
-> 然后打开 http://localhost:8000（课程数据已随仓库内置，无需导入）。
-
 想给同宿舍/同班同学用？同一 WiFi 下访问 `http://你的IP:8000`（服务用 `--host 0.0.0.0` 启动，已支持）；不在同一网络可用 `cloudflared tunnel --url http://localhost:8000` 生成临时公网地址。**每人本地运行、Key 只存在各自电脑上** 是推荐姿势。
+
+## 让 AI Agent 帮你部署
+
+懒得动手？把下面这段话完整复制给任意 AI agent（Claude Code、Cursor 等），它会自动完成下载、装环境、启动：
+
+```text
+请帮我在本机部署一个开源工具「选课助手」（选课查询工作台），按以下步骤执行：
+
+1. 环境检查：确认本机有 Python 3.10+（运行 python --version）。如果没有，
+   提示我去 python.org 安装并勾选 "Add Python to PATH"，等我装好后继续。
+
+2. 获取代码：git clone https://github.com/newnewself/xuanke-assistant.git
+   然后进入 xuanke-assistant 目录。（没有 git 就从仓库页面下载 ZIP 解压）
+
+3. 安装依赖（在项目目录下）：
+   python -m venv .venv
+   激活虚拟环境：Windows 用 .venv\Scripts\activate，macOS/Linux 用 source .venv/bin/activate
+   pip install -r requirements.txt
+   （下载慢就加国内镜像：-i https://pypi.tuna.tsinghua.edu.cn/simple）
+
+4. 启动服务：python -m uvicorn app.main:app --host 0.0.0.0 --port 8000
+   然后确认 http://localhost:8000 可以正常打开。
+   课程数据已内置在 data/courses.db，无需任何导入步骤。
+
+5. 启动成功后提醒我最后一步：在网页左侧「AI 设置」填入 API Key 才能使用
+   AI 对话（Key 我自己向工具作者索取，或在智谱开放平台 open.bigmodel.cn
+   注册免费领取 glm-4-flash 的 Key）。不填 Key 也能正常手动查课。
+
+注意事项：
+- 不要构建前端，frontend/dist 已预构建，直接用
+- 不要修改/删除 data/ 目录里的课程数据文件
+- 如果 8000 端口被占用，换一个端口启动并把新地址告诉我
+- 任何一步报错，把完整错误信息给我看再继续
+```
+
+极简版（agent 会自行阅读本 README 完成部署）：
+
+```text
+帮我把 https://github.com/newnewself/xuanke-assistant 克隆到本机并运行起来，
+仓库 README 里有完整的部署步骤，照着做，完成后告诉我怎么用。
+```
 
 ## 手动运行（开发者）
 
