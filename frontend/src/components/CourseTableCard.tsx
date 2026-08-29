@@ -3,7 +3,7 @@ import { Button, Checkbox, Col, Dropdown, Input, Row, Space, Switch, Table, Tag,
 import type { ColumnsType } from 'antd/es/table'
 import { SettingOutlined, StarFilled, StarOutlined } from '@ant-design/icons'
 import { CourseRow, PanelData } from '../types'
-import { FIELD_DEFS } from '../constants'
+import { FIELD_DEFS, WEEKDAY_NAMES } from '../constants'
 import { filterByIds, searchCourses } from '../api'
 import { BusySlot, busySlotsToParam } from '../hooks/useBusySlots'
 import { FavoritesApi } from '../hooks/useFavorites'
@@ -62,6 +62,11 @@ export default function CourseTableCard({ panel, busySlots, customCategories, fa
     let arr = rows
     for (const [key, vals] of Object.entries(colFilters)) {
       if (!vals || !vals.length) continue
+      if (key === 'sessions_brief') {
+        // 上课时间筛选按“周几”包含匹配（brief 是组合文本，精确值匹配无意义）
+        arr = arr.filter(r => vals.some(v => String(r.sessions_brief ?? '').includes(String(v))))
+        continue
+      }
       arr = arr.filter(r => vals.includes(String(r[key] ?? '')))
     }
     return arr.length
@@ -138,6 +143,12 @@ export default function CourseTableCard({ panel, busySlots, customCategories, fa
       ellipsis: !def.render, fixed: def.key === 'course_no' || def.key === 'course_name' ? ('left' as const) : undefined,
     }
     if (def.filter) {
+      if (def.key === 'sessions_brief') {
+        // 上课时间列：时间段组合太多，按“周几”包含匹配（勾选多天=任一命中）
+        col.filters = WEEKDAY_NAMES.map(w => ({ text: w, value: w }))
+        col.onFilter = (v: any, row: any) => String(row.sessions_brief ?? '').includes(String(v))
+        return col
+      }
       const vals = Array.from(new Set(panel.rows.map(r => String(r[def.key] ?? '')))).filter(Boolean)
       // 课程类别列：并入自定义类别名（暂未关联课程时也保持可见）
       if (def.key === 'course_category') {

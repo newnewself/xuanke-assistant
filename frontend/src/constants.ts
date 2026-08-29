@@ -21,7 +21,7 @@ export const FIELD_DEFS: FieldDef[] = [
   { key: 'course_no', title: '课程号', main: true, width: 100, filter: true, filterSearch: true },
   { key: 'course_name', title: '课程名称', main: true, width: 170, filter: true, filterSearch: true },
   { key: 'teachers', title: '教师', main: true, width: 110, filter: true, filterSearch: true },
-  { key: 'sessions_brief', title: '上课时间', main: true, width: 200 },
+  { key: 'sessions_brief', title: '上课时间', main: true, width: 200, filter: true },
   { key: 'credit', title: '学分', main: true, width: 70, render: 'credit', filter: true },
   { key: 'nature', title: '性质', main: true, width: 80, render: 'nature' },
   { key: 'course_category', title: '课程类别', main: true, width: 110, filter: true },

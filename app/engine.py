@@ -270,6 +270,22 @@ def hits_window(sessions: list[dict], weekday: int, pmin: int, pmax: int) -> boo
     return False
 
 
+def hits_any(sessions: list[dict],
+             weekdays: set[int] | None = None,
+             periods: set[int] | None = None) -> bool:
+    """课程是否命中 任选星期 × 任选节次：至少一个时段同时满足两个维度。
+
+    传入 None 或空集表示该维度不限；两维都不限时等价于"有课即命中"。
+    """
+    for s in sessions:
+        if weekdays and s["weekday"] not in weekdays:
+            continue
+        if periods and not any(p in periods for p in s["periods"]):
+            continue
+        return True
+    return False
+
+
 # ---------- 查询 ----------
 
 MAIN_FIELDS = [

@@ -144,3 +144,24 @@ def test_write_db_preserves_history(tmp_db, tmp_path):
     with e.begin() as conn:
         assert conn.execute(text("SELECT count(*) FROM panels")).scalar() == 1
         assert conn.execute(text("SELECT count(*) FROM chat_messages")).scalar() == 1
+
+
+def test_search_weekdays_and_periods_multiselect(tmp_db):
+    """查询卡新增的周几/节次多选：任选集合内任一命中；组合时段须同时满足两维。"""
+    # 多选周几：周一或周四 → X-1（周一1-2）与 X-3（周四6-7）
+    res = courses.search_courses_impl({"weekdays": "1,4"})
+    assert {r["xk_id"] for r in res["rows"]} == {"X-1", "X-3"}
+    # 多选节次：第3、6节 → X-2（周三3-4）与 X-3（周四6-7），星期不限
+    res = courses.search_courses_impl({"periods": "3,6"})
+    assert {r["xk_id"] for r in res["rows"]} == {"X-2", "X-3"}
+    # 组合：周二 × 第1或6节 → 只有 X-1（周二1-2）
+    res = courses.search_courses_impl({"weekdays": "2", "periods": "1,6"})
+    assert {r["xk_id"] for r in res["rows"]} == {"X-1"}
+    # 组合无交集：周一第6节没有任何课
+    res = courses.search_courses_impl({"weekdays": "1", "periods": "6"})
+    assert res["total"] == 0
+    # 中文逗号容错、非法项忽略
+    res = courses.search_courses_impl({"weekdays": "1，4,x"})
+    assert {r["xk_id"] for r in res["rows"]} == {"X-1", "X-3"}
+    # 两维都不传 = 不限
+    assert courses.search_courses_impl({})["total"] == 3

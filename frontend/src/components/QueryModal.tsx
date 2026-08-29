@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react'
-import { Form, Input, Modal, Select, Switch, Button, Space, message } from 'antd'
+import { Checkbox, Form, Input, Modal, Select, Switch, Button, Space, message } from 'antd'
 import { Meta, PanelData } from '../types'
+import { MAX_PERIOD, WEEKDAY_NAMES } from '../constants'
 import { searchCourses } from '../api'
 import { BusySlot, busySlotsToParam } from '../hooks/useBusySlots'
 
@@ -14,6 +15,7 @@ interface Props {
 
 interface FormValues {
   course_name?: string; course_no?: string; course_category?: string; course_attribution?: string
+  weekdays?: number[]; periods?: number[]
   only_available?: boolean; avoid_busy?: boolean
 }
 
@@ -33,8 +35,14 @@ export default function QueryModal({ open, onClose, meta, onPush, busySlots }: P
     const v: FormValues = await form.validateFields()
     setLoading(true)
     try {
+      // 多选的周几/节次转成逗号串传给后端；query 里存同样的串，表格工具栏重查时原样带回
+      const query = {
+        ...v,
+        weekdays: v.weekdays?.length ? v.weekdays.join(',') : undefined,
+        periods: v.periods?.length ? v.periods.join(',') : undefined,
+      }
       const res = await searchCourses({
-        limit: 0, ...v,
+        limit: 0, ...query,
         // avoid_busy 之前只传了开关没传时段数据，后端无从剔除；这里补齐（含周次限制）
         ...(v.avoid_busy && busySlots.length ? { busy_slots: busySlotsToParam(busySlots) } : {}),
       })
@@ -43,11 +51,13 @@ export default function QueryModal({ open, onClose, meta, onPush, busySlots }: P
       if (v.course_no) parts.push(v.course_no)
       if (v.course_category) parts.push(v.course_category)
       if (v.course_attribution) parts.push(v.course_attribution)
+      if (v.weekdays?.length) parts.push(v.weekdays.map(d => WEEKDAY_NAMES[d - 1] ?? `周${d}`).join('/'))
+      if (v.periods?.length) parts.push(`${v.periods.join(',')}节`)
       if (v.only_available) parts.push('有余量')
       const title = `${parts.join(' · ') || '全部课程'}（${res.total} 门）`
       // 带上查询参数与避开开关初始态：表格工具栏可切换"避开已占时段"重查
       onPush({ title: title.length > 60 ? title.slice(0, 57) + '…' : title,
-        rows: res.rows, total: res.total, query: { ...v }, avoid_busy: !!v.avoid_busy })
+        rows: res.rows, total: res.total, query, avoid_busy: !!v.avoid_busy })
       onClose()
     } catch (e: any) {
       message.error(String(e.message || e))
@@ -78,6 +88,13 @@ export default function QueryModal({ open, onClose, meta, onPush, busySlots }: P
             <Select options={attributionOptions} allowClear showSearch placeholder="不限" />
           </Form.Item>
         </Space>
+        <Form.Item name="weekdays" label="周几（可多选；不勾=不限）" style={{ marginBottom: 10 }}>
+          <Checkbox.Group options={WEEKDAY_NAMES.map((label, i) => ({ label, value: i + 1 }))} />
+        </Form.Item>
+        <Form.Item name="periods" label={`上课节数（可多选；每天共 ${MAX_PERIOD} 节，不勾=不限）`}
+          style={{ marginBottom: 16 }}>
+          <Checkbox.Group options={Array.from({ length: MAX_PERIOD }, (_, i) => ({ label: `${i + 1}节`, value: i + 1 }))} />
+        </Form.Item>
         <Space size={24}>
           <Form.Item name="only_available" label="仅看有余量" valuePropName="checked" style={{ marginBottom: 0 }}>
             <Switch />

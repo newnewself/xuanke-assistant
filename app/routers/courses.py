@@ -12,6 +12,20 @@ from .. import engine as eng
 router = APIRouter(prefix="/api")
 
 
+def _parse_int_set(raw) -> set[int]:
+    """'1,3,5' / '1，3' / [1,3] → {1,3,5}；忽略无法解析的项。"""
+    if raw in (None, ""):
+        return set()
+    items = raw if isinstance(raw, (list, tuple)) else str(raw).replace("，", ",").split(",")
+    out = set()
+    for x in items:
+        try:
+            out.add(int(str(x).strip()))
+        except ValueError:
+            continue
+    return out
+
+
 def search_courses_impl(args: dict, busy_slots: set | None = None,
                         sort: str | None = None, limit: int = 50, offset: int = 0) -> dict:
     """limit=0 表示不截断，返回全部符合条件的结果。"""
@@ -61,10 +75,14 @@ def search_courses_impl(args: dict, busy_slots: set | None = None,
     weekday = args.get("weekday")
     pmin = args.get("period_min") or 1
     pmax = args.get("period_max") or 15
+    wd_set = _parse_int_set(args.get("weekdays"))
+    p_set = _parse_int_set(args.get("periods"))
     out, busy_removed = [], 0
     for r in rows:
         sessions = json.loads(r.sessions_json or "[]")
         if weekday and not eng.hits_window(sessions, int(weekday), int(pmin), int(pmax)):
+            continue
+        if (wd_set or p_set) and not eng.hits_any(sessions, wd_set or None, p_set or None):
             continue
         if busy_slots and eng.busy_conflict(sessions, busy_slots):
             busy_removed += 1
@@ -135,6 +153,7 @@ def courses(
     course_name: str = "", course_no: str = "", course_category: str = "", course_attribution: str = "",
     teacher: str = "", credit_min: float | None = None, credit_max: float | None = None,
     weekday: int | None = None, period_min: int = 1, period_max: int = 15,
+    weekdays: str = "", periods: str = "",   # 多选："1,3,5"（周一/周三/周五）、"1,2,6"（节次）
     only_available: bool = False, avoid_busy: bool = False,
     busy_slots: str = "",          # 格式 "1:1;3:6;4:7:2,6,8,10"（w:p[:周次]，; 分隔）
     sort: str = "course_name", limit: int = Query(50, ge=0, le=5000), offset: int = 0,
@@ -146,6 +165,7 @@ def courses(
          "course_attribution": course_attribution,
          "teacher": teacher, "credit_min": credit_min, "credit_max": credit_max,
          "weekday": weekday, "period_min": period_min, "period_max": period_max,
+         "weekdays": weekdays, "periods": periods,
          "only_available": only_available},
         busy_slots=busy if avoid_busy else set(), sort=sort, limit=limit, offset=offset)
 
