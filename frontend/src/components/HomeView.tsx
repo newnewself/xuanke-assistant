@@ -21,7 +21,7 @@ export default function HomeView(p: Props) {
     { icon: <MessageOutlined />, title: '开始新对话', desc: '用大白话说需求，AI 帮你查课', onClick: p.onNewChat },
     { icon: <PlusSquareOutlined />, title: '新建查询卡', desc: '手动多条件筛选课程', onClick: p.onOpenQuery },
     { icon: <ClockCircleOutlined />, title: '标记已占时段', desc: `已标 ${p.busyCount} 个，查询自动避开`, onClick: p.onOpenBusy },
-    { icon: <BookOutlined />, title: '使用说明', desc: '四步上手', onClick: p.onOpenGuide },
+    { icon: <BookOutlined />, title: '使用说明', desc: '三步上手', onClick: p.onOpenGuide },
   ]
 
   return (
