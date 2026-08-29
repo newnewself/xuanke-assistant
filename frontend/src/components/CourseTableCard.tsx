@@ -149,7 +149,8 @@ export default function CourseTableCard({ panel, busySlots, customCategories, fa
         col.onFilter = (v: any, row: any) => String(row.sessions_brief ?? '').includes(String(v))
         return col
       }
-      const vals = Array.from(new Set(panel.rows.map(r => String(r[def.key] ?? '')))).filter(Boolean)
+      // 选项取自当前实际显示的行：开关重查/快搜后选项随数据收敛，不再出现筛不出的值
+      const vals = Array.from(new Set(rows.map(r => String(r[def.key] ?? '')))).filter(Boolean)
       // 课程类别列：并入自定义类别名（暂未关联课程时也保持可见）
       if (def.key === 'course_category') {
         for (const c of customCategories ?? []) if (!vals.includes(c)) vals.push(c)
@@ -176,7 +177,7 @@ export default function CourseTableCard({ panel, busySlots, customCategories, fa
     if (def.render === 'nature') col.render = (v: string) =>
       <Tag bordered={false} color={natureColor[v] || 'default'} style={{ marginInlineEnd: 0 }}>{v}</Tag>
     return col
-  }), [visibleDefs, panel.rows, customCategories])
+  }), [visibleDefs, rows, customCategories])
 
   return (
     <>
