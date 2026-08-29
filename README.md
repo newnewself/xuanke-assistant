@@ -20,7 +20,7 @@
 > 想让 AI agent 帮你部署？让它执行下面几行即可：
 >
 > ```bash
-> git clone https://github.com/<你的用户名>/xuanke-assistant.git
+> git clone https://github.com/newnewself/xuanke-assistant.git
 > cd xuanke-assistant
 > pip install -r requirements.txt
 > python -m uvicorn app.main:app --host 0.0.0.0 --port 8000
