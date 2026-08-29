@@ -6,6 +6,8 @@ export async function api<T>(path: string, init?: RequestInit): Promise<T> {
     ...init,
   })
   if (!res.ok) {
+    // 全站访问口令：后端返回 401 时通知全局弹出口令输入框（App 监听此事件）
+    if (res.status === 401) window.dispatchEvent(new CustomEvent('xk-access-required'))
     let detail = `${res.status} ${res.statusText}`
     try {
       const data = await res.json()
@@ -15,6 +17,10 @@ export async function api<T>(path: string, init?: RequestInit): Promise<T> {
   }
   return res.json()
 }
+
+/** 提交访问口令：成功后服务端种下 30 天授权 Cookie */
+export const submitAccessCode = (code: string) =>
+  api<{ ok: boolean }>('/api/access', { method: 'POST', body: JSON.stringify({ code }) })
 
 export const getMeta = () => api<Meta>('/api/meta')
 export const getSessions = () => api<ChatSession[]>('/api/sessions')
@@ -67,6 +73,7 @@ export async function streamChat(
     return
   }
   if (!res.ok || !res.body) {
+    if (res.status === 401) window.dispatchEvent(new CustomEvent('xk-access-required'))
     let detail = `请求失败 (${res.status})`
     try {
       const data = await res.json()

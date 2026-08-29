@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
-import { Badge, Button, Empty, Menu, message, Space, Tooltip, Typography } from 'antd'
+import { Badge, Button, Empty, Input, Menu, message, Modal, Space, Tooltip, Typography } from 'antd'
 import {
   BookOutlined, BorderOutlined, ClockCircleOutlined, CommentOutlined, FileExcelOutlined,
   HomeOutlined, MessageOutlined, PlusOutlined, SettingOutlined, StarOutlined, SwitcherOutlined,
@@ -8,7 +8,7 @@ import {
 } from '@ant-design/icons'
 import { PanelData } from './types'
 import { APP_VERSION, FEEDBACK_URL } from './constants'
-import { filterByIds, getConfig, getMeta, getSessions } from './api'
+import { filterByIds, getConfig, getMeta, getSessions, submitAccessCode } from './api'
 import { useBusySlots } from './hooks/useBusySlots'
 import { useFavorites } from './hooks/useFavorites'
 import ChatPanel from './components/ChatPanel'
@@ -38,6 +38,9 @@ export default function App() {
   const [importOpen, setImportOpen] = useState(false)
   const [queryOpen, setQueryOpen] = useState(false)
   const [fullscreen, setFullscreen] = useState(false)
+  const [accessOpen, setAccessOpen] = useState(false)
+  const [accessCode, setAccessCode] = useState('')
+  const [accessChecking, setAccessChecking] = useState(false)
 
   const panelScrollRef = useRef<HTMLDivElement>(null)
 
@@ -115,6 +118,27 @@ export default function App() {
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
   }, [fullscreen])
+
+  // 全站访问口令：任一接口返回 401 时弹出口令输入框；验证通过后刷新整页重新拉数据
+  useEffect(() => {
+    const onAccessRequired = () => setAccessOpen(true)
+    window.addEventListener('xk-access-required', onAccessRequired)
+    return () => window.removeEventListener('xk-access-required', onAccessRequired)
+  }, [])
+
+  const submitAccess = async () => {
+    if (!accessCode.trim() || accessChecking) return
+    setAccessChecking(true)
+    try {
+      await submitAccessCode(accessCode.trim())
+      message.success('验证通过')
+      window.location.reload()
+    } catch (e: any) {
+      message.error(String(e.message || e))
+    } finally {
+      setAccessChecking(false)
+    }
+  }
 
   const menuItems = [
     { key: 'home', icon: <HomeOutlined />, label: '首页' },
@@ -241,6 +265,19 @@ export default function App() {
       <ImportModal open={importOpen} onClose={() => setImportOpen(false)} onImported={onImported} />
       <QueryModal open={queryOpen} onClose={() => setQueryOpen(false)} meta={meta} onPush={pushPanel}
         busySlots={busy.slots} />
+
+      <Modal title="请输入访问口令" open={accessOpen} closable={false} keyboard={false}
+        maskClosable={false} footer={null} width={360}>
+        <div style={{ display: 'flex', gap: 8 }}>
+          <Input.Password placeholder="口令向工具作者索取" value={accessCode}
+            onChange={e => setAccessCode(e.target.value)}
+            onPressEnter={submitAccess} autoFocus />
+          <Button type="primary" loading={accessChecking} onClick={submitAccess}>进入</Button>
+        </div>
+        <div style={{ fontSize: 12, color: '#8a939f', marginTop: 8 }}>
+          本工具仅供授权用户访问；输错可重试，验证通过后 30 天内免输。
+        </div>
+      </Modal>
     </div>
   )
 }

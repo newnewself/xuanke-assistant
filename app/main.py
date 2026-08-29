@@ -4,6 +4,8 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import HTMLResponse
 
+from .access import gate as access_gate
+from .access import router as access_router
 from .config import FRONTEND_DIST
 from .db import Base, engine
 from .routers import admin, chat, courses, settings, source
@@ -14,11 +16,19 @@ app = FastAPI(title="选课助手", version="1.0.0")
 app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_methods=["*"],
                    allow_headers=["*"])
 
+
+@app.middleware("http")
+async def _access_gate(request, call_next):
+    """全站访问口令：config.local.json 配置 access_code 时启用（见 app/access.py）。"""
+    return await access_gate(request, call_next)
+
+
 app.include_router(courses.router)
 app.include_router(admin.router)
 app.include_router(settings.router)
 app.include_router(source.router)
 app.include_router(chat.router)
+app.include_router(access_router)
 
 
 @app.get("/api/health")
