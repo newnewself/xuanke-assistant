@@ -1,0 +1,22 @@
+# Python
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+
+# 运行日志与上传临时件（data 下的 courses.db 与课程 xlsx 随仓库分发，下载者开箱即用）
+data/uvicorn.log
+data/uploads/
+
+# 个人配置（含 API key，绝不提交）
+config.local.json
+
+# 内部开发文档（不随公开仓库分发）
+HANDOFF.md
+开发记录.md
+
+# 前端
+frontend/node_modules/
+
+# Excel 打开时的临时锁文件
+~$*
