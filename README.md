@@ -29,8 +29,10 @@
 1. 环境检查：确认本机有 Python 3.10+（运行 python --version）。如果没有，
    提示我去 python.org 安装并勾选 "Add Python to PATH"，等我装好后继续。
 
-2. 获取代码：git clone https://github.com/newnewself/xuanke-assistant.git
-   然后进入 xuanke-assistant 目录。（没有 git 就从仓库页面下载 ZIP 解压）
+2. 获取代码：先问我希望把工具安装到哪个目录（可以给我推荐，如 Windows 的
+   D:\xuanke-assistant 或桌面），确认后在那个位置
+   git clone https://github.com/newnewself/xuanke-assistant.git
+   并进入 xuanke-assistant 目录。（没有 git 就从仓库页面下载 ZIP 解压到该位置）
 
 3. 安装依赖（在项目目录下）：
    python -m venv .venv
@@ -50,6 +52,8 @@
 - 不要构建前端，frontend/dist 已预构建，直接用
 - 不要修改/删除 data/ 目录里的课程数据文件
 - 如果 8000 端口被占用，换一个端口启动并把新地址告诉我
+- 部署完成后明确告诉我两件事：工具安装在哪个目录；以后如何再次启动
+  （进入安装目录双击 启动.bat 即可，或运行第 4 步的启动命令）
 - 任何一步报错，把完整错误信息给我看再继续
 ```
 
